@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة جزم الفعل المضارع</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    direction: rtl;
+    background: #f5f4f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .container {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.08);
+    max-width: 600px;
+    width: 100%;
+    padding: 2rem 1.5rem;
+  }
+  .header { text-align: center; margin-bottom: 1.5rem; }
+  .header h1 { font-size: 22px; font-weight: 600; color: #1a1a2e; }
+  .header p { font-size: 14px; color: #888; margin-top: 4px; }
+
+  .score-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+  .score-pill { background: #f5f4f0; border: 1px solid #e5e5e5; border-radius: 8px; padding: 6px 16px; font-size: 14px; color: #555; }
+  .score-pill span { font-weight: 600; color: #1a1a2e; }
+
+  .mode-tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+  .mode-btn { flex: 1; padding: 8px; border: 1px solid #e5e5e5; border-radius: 8px; background: #f5f4f0; color: #555; font-size: 13px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .mode-btn.active { border-color: #534AB7; background: #EEEDFE; color: #3C3489; }
+
+  .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+
+  .type-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 8px; margin-bottom: 8px; }
+  .badge-lam { background: #E6F1FB; color: #0C447C; }
+  .badge-la { background: #FAEEDA; color: #633806; }
+  .badge-lem { background: #EAF3DE; color: #27500A; }
+
+  .question-label { font-size: 13px; color: #888; margin-bottom: 8px; }
+  .question-text { font-size: 19px; font-weight: 500; color: #1a1a2e; line-height: 2; text-align: center; margin-bottom: 1.25rem; }
+
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choice-btn { padding: 12px; border: 1px solid #e5e5e5; border-radius: 8px; background: #fff; color: #1a1a2e; font-size: 16px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .choice-btn:hover { background: #f5f4f0; }
+  .choice-btn.correct { border-color: #0F6E56; background: #E1F5EE; color: #085041; }
+  .choice-btn.wrong { border-color: #993C1D; background: #FAECE7; color: #4A1B0C; }
+
+  .feedback { text-align: center; padding: 12px; border-radius: 8px; margin-top: 1rem; font-size: 15px; font-weight: 500; display: none; line-height: 1.8; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #E1F5EE; color: #085041; }
+  .feedback.no { background: #FAECE7; color: #4A1B0C; }
+
+  .next-btn { width: 100%; margin-top: 1rem; padding: 12px; border: 1px solid #e5e5e5; border-radius: 8px; background: #f5f4f0; color: #1a1a2e; font-size: 15px; cursor: pointer; display: none; font-family: inherit; }
+  .next-btn.show { display: block; }
+
+  .rule-box { background: #EEEDFE; border: 1px solid #AFA9EC; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .rule-title { font-size: 13px; color: #3C3489; font-weight: 600; margin-bottom: 6px; }
+  .rule-text { font-size: 14px; color: #534AB7; line-height: 2; }
+  .rule-text b { color: #26215C; }
+
+  .final-card { text-align: center; padding: 2rem 1rem; }
+  .final-card h3 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+  .final-card p { color: #888; margin-bottom: 1.5rem; font-size: 16px; }
+  .restart-btn { padding: 10px 32px; border: 1px solid #e5e5e5; border-radius: 8px; background: #f5f4f0; color: #1a1a2e; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .restart-btn:hover { background: #EEEDFE; border-color: #534AB7; color: #3C3489; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🎮 لعبة جزم الفعل المضارع</h1>
+    <p>تعلّم قواعد الجزم بطريقة تفاعلية وممتعة</p>
+  </div>
+  <div id="root"></div>
+</div>
+
+<script>
+const questions = [
+  { type: "لم", q: "اختر الفعل المجزوم الصحيح: لم ___ محمد درسه.", choices: ["يكتبُ","يكتبْ","يكتبَ","يكتبا"], answer: 1, explain: "بعد (لم) يُجزم الفعل المضارع، فتحذف الضمة وتُسكَّن الحرف الأخير." },
+  { type: "لا الناهية", q: "اختر الفعل المجزوم: ___ تؤخر عمل اليوم إلى الغد.", choices: ["لا تؤخرَ","لا تؤخرُ","لا تؤخرْ","لا تؤخرا"], answer: 2, explain: "(لا) الناهية تجزم الفعل المضارع وتفيد النهي عن الفعل." },
+  { type: "لم", q: "أي الجمل صحيحة نحوياً؟", choices: ["لم تذهبَ سارة","لم تذهبْ سارة","لم تذهبُ سارة","لم يذهبا سارة"], answer: 1, explain: "بعد (لم) يُجزم الفعل، فيكون (تذهبْ) بالسكون." },
+  { type: "لما", q: "لما ___ الطالب الإجابة بعد.", choices: ["يعرفُ","يعرفَ","يعرفْ","يعرفان"], answer: 2, explain: "(لما) تجزم الفعل المضارع وتفيد نفي حدوث الفعل حتى الآن." },
+  { type: "لا الناهية", q: "ما الفعل المجزوم في: (يا علي، لا تكذبْ)؟", choices: ["يا","علي","لا","تكذبْ"], answer: 3, explain: "(تكذبْ) هو الفعل المجزوم بـ(لا) الناهية، وعلامة جزمه السكون." },
+  { type: "لم", q: "الفعل (يسافر) بعد (لم) يصبح:", choices: ["يسافرُ","يسافرَ","يسافرْ","يسافرتُ"], answer: 2, explain: "الفعل الصحيح الآخر يُجزم بالسكون، فيصبح (يسافرْ)." },
+  { type: "لا الناهية", q: "اختر الجملة الصحيحة للنهي:", choices: ["لا تضربُ زميلك","لا تضربَ زميلك","لا تضربْ زميلك","لا ضربَ زميلك"], answer: 2, explain: "(لا تضربْ) صحيحة: لا الناهية + الفعل مجزوم بالسكون." },
+  { type: "لما", q: "لما ___ الأمطار بعد في هذا الشهر.", choices: ["تنزلُ","تنزلَ","تنزلْ","نزلتْ"], answer: 2, explain: "(لما) حرف جزم ونفي وقلب، يجزم الفعل المضارع بالسكون." }
+];
+
+const badgeClass = { "لم": "badge-lam", "لا الناهية": "badge-la", "لما": "badge-lem" };
+let mode = "quiz", current = 0, score = 0, answered = false;
+
+function render() {
+  document.getElementById("root").innerHTML =
+    renderTabs() + (mode === "rules" ? renderRules() : renderQuiz());
+  answered = false;
+}
+
+function renderTabs() {
+  return `<div class="mode-tabs">
+    <button class="mode-btn ${mode==='quiz'?'active':''}" onclick="switchMode('quiz')">تدريب تفاعلي</button>
+    <button class="mode-btn ${mode==='rules'?'active':''}" onclick="switchMode('rules')">القواعد</button>
+  </div>`;
+}
+
+function renderRules() {
+  return `
+    <div class="rule-box">
+      <div class="rule-title">أدوات الجزم الثلاث</div>
+      <div class="rule-text">
+        <b>١. لَمْ</b> — حرف نفي وجزم وقلب. تنفي الفعل وتقلب زمانه للماضي.<br>مثال: لم <b>يذهبْ</b> خالد اليوم.<br><br>
+        <b>٢. لَمَّا</b> — مثل (لم) لكن النفي مستمر حتى الآن.<br>مثال: لمّا <b>يصلْ</b> الضيف بعد.<br><br>
+        <b>٣. لا الناهية</b> — تفيد النهي والطلب بعدم الفعل.<br>مثال: لا <b>تكذبْ</b>. — لا <b>تهملْ</b> واجبك.
+      </div>
+    </div>
+    <div class="rule-box" style="background:#E1F5EE; border-color:#5DCAA5;">
+      <div class="rule-title" style="color:#085041;">علامات الجزم</div>
+      <div class="rule-text" style="color:#0F6E56;">
+        <b>السكون</b> — إذا كان الفعل صحيح الآخر: يكتب<b>ْ</b> — يذهب<b>ْ</b><br>
+        <b>حذف النون</b> — في أفعال المثنى والجمع (الأمثلة الخمسة):<br>
+        &nbsp;&nbsp;يكتبان ← لم يكتبا | تكتبان ← لم تكتبا<br>
+        <b>حذف حرف العلة</b> — إذا كان الفعل معتل الآخر:<br>
+        &nbsp;&nbsp;يسعى ← لم يسعَ | يدعو ← لم يدعُ | يرمي ← لم يرمِ
+      </div>
+    </div>
+    <button class="next-btn show" style="margin-top:0;" onclick="switchMode('quiz')">← ابدأ التدريب</button>`;
+}
+
+function renderQuiz() {
+  if (current >= questions.length) {
+    const pct = Math.round(score / questions.length * 100);
+    const emoji = pct >= 80 ? "🌟" : pct >= 50 ? "👍" : "💪";
+    return `<div class="card final-card">
+      <h3>${emoji} انتهت اللعبة!</h3>
+      <p>حصلت على <b>${score}</b> من <b>${questions.length}</b> — (${pct}%)</p>
+      <button class="restart-btn" onclick="restart()">إعادة اللعبة</button>
+    </div>`;
+  }
+  const q = questions[current];
+  const choices = q.choices.map((c, i) =>
+    `<button class="choice-btn" id="ch${i}" onclick="choose(${i})">${c}</button>`).join("");
+  return `
+    <div class="score-bar">
+      <div class="score-pill">السؤال <span>${current+1}</span> من <span>${questions.length}</span></div>
+      <div class="score-pill">النقاط <span>${score}</span></div>
+    </div>
+    <div class="card">
+      <span class="type-badge ${badgeClass[q.type]}">${q.type}</span>
+      <div class="question-label">اختر الإجابة الصحيحة</div>
+      <div class="question-text">${q.q}</div>
+      <div class="choices">${choices}</div>
+      <div class="feedback" id="fb"></div>
+    </div>
+    <button class="next-btn" id="nextBtn" onclick="nextQ()">السؤال التالي ←</button>`;
+}
+
+function switchMode(m) { mode = m; render(); }
+
+function choose(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const fb = document.getElementById("fb");
+  const nextBtn = document.getElementById("nextBtn");
+  q.choices.forEach((_, i) => {
+    const btn = document.getElementById("ch"+i);
+    if (i === q.answer) btn.classList.add("correct");
+    else if (i === idx) btn.classList.add("wrong");
+    btn.style.cursor = "default";
+  });
+  if (idx === q.answer) {
+    score++;
+    fb.className = "feedback show ok";
+    fb.textContent = "✓ ممتاز! " + q.explain;
+  } else {
+    fb.className = "feedback show no";
+    fb.textContent = "✗ الإجابة خاطئة. " + q.explain;
+  }
+  nextBtn.classList.add("show");
+}
+
+function nextQ() { current++; render(); }
+function restart() { current = 0; score = 0; mode = "quiz"; render(); }
+
+render();
+</script>
+</body>
+</html>
